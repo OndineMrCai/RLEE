@@ -5,6 +5,8 @@ SavePath=
 datapath="./rlee/data"
 reward_type=rlee
 
+wandb login $WANDB_API_KEY
+
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     data.train_files=$basepath/train/train.parquet \
