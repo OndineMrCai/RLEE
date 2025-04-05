@@ -21,7 +21,7 @@ pip3 install -e.
 
 
 ### Training
-We directly use the training data from [Open-Zero-Reasoner](https://github.com/Open-Reasoner-Zero/Open-Reasoner-Zero) at rlee/data/train directory.
+We directly use the training data from [Open-Zero-Reasoner](https://github.com/Open-Reasoner-Zero/Open-Reasoner-Zero) at rlee/data/train directory. Please remember to change the save path in the bash shell.
 
 Train RLEE
 ```
