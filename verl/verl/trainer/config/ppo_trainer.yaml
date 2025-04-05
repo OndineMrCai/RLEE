@@ -189,6 +189,7 @@ algorithm:
     max_num_gen_batches: 0 # Non-positive values mean no upper limit
 
 trainer:
+  reward_type: default
   balance_batch: True
   total_epochs: 30
   total_training_steps: null

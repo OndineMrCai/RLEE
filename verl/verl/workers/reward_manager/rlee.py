@@ -30,25 +30,26 @@ class RleeRewardManager:
         self.num_examine = num_examine
         self.config=config
 
-    def __call__(self, data: DataProto):
+    def __call__(self, data: DataProto, gen_branch: DataProto, return_dict: bool = True):
         """We will expand this function gradually based on the available datasets"""
 
         # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
         if 'rm_scores' in data.batch.keys():
-            return data.batch['rm_scores']
-
-        
+            if return_dict:
+                return {"reward": data.batch['rm_scores']}
+            else:
+                return data.batch['rm_scores']
 
         already_print_data_sources = {}
         data_source = data[0].non_tensor_batch['data_source']
         compute_score_fn = _select_rm_score_fn(data_source,self.config)
-        exploration_sample_index = data.batch['exploration_sample_index']
+        exploration_sample_index = gen_branch.batch['exploration_sample_index']
         sample_ids = exploration_sample_index[:, 0]
         counts = torch.bincount(sample_ids, minlength=len(data))
-        reward_tensor = torch.zeros_like((len(counts), data.batch['responses'].shape[-1]), dtype=torch.float32)
-        idx = 0
-        sample_index = 0
-        while idx < len(data):
+        reward_tensor = torch.zeros_like(data.batch['responses'], dtype=torch.float32)
+        exploration_reward_tensor = torch.zeros_like(data.batch['responses'], dtype=torch.float32)
+        branch_idx = 0
+        for idx in range(len(data)):
             data_item = data[idx]  # DataProtoItem
             prompt_ids = data_item.batch['prompts']
             prompt_length = prompt_ids.shape[-1]
@@ -64,11 +65,11 @@ class RleeRewardManager:
             sequences = torch.cat((valid_prompt_ids, valid_response_ids))
             sequences_str = self.tokenizer.decode(sequences)
 
-            branch_num = counts[sample_index]
+            branch_num = counts[idx]
             branch = []
             branch_length = []
-            for i in range(branch_num):
-                branch_data_item = data[idx + i]
+            for j in range(branch_num):
+                branch_data_item = gen_branch[branch_idx + j]
                 branch_prompt_ids = branch_data_item.batch['branch_prompts']
                 branch_prompt_length = branch_prompt_ids.shape[-1]
                 valid_branch_prompt_length = branch_data_item.batch['attention_mask'][:branch_prompt_length].sum()
@@ -93,9 +94,10 @@ class RleeRewardManager:
                                                                                 branch_length=grouped_branch_length,
                                                                                 ground_truth=ground_truth)
             
-            reward_tensor[sample_index, valid_response_length - 1] = answer_reward + format_reward
+            reward_tensor[idx, valid_response_length - 1] = answer_reward + format_reward
             for j in range(len(exploration_reward)):
-                reward_tensor[sample_index, exploration_sample_index[idx + j,1]] = exploration_reward[j]
+                reward_tensor[idx, exploration_sample_index[branch_idx + j,1]] = exploration_reward[j]
+                exploration_reward_tensor[idx, exploration_sample_index[branch_idx + j,1]] = exploration_reward[j]
             if data_source not in already_print_data_sources:
                 already_print_data_sources[data_source] = 0
 
@@ -103,7 +105,12 @@ class RleeRewardManager:
                 already_print_data_sources[data_source] += 1
                 print(sequences_str)
 
-            idx = idx + counts[sample_index]
-            sample_index = sample_index + 1
-
-        return reward_tensor
+            branch_idx = branch_idx + counts[idx]
+        
+        if return_dict:
+            return {
+                "reward_tensor": reward_tensor,
+                "exploration_reward_tensor": exploration_reward_tensor,
+            }
+        else:
+            return reward_tensor

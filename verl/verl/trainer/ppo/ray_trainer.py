@@ -283,7 +283,7 @@ class RayPPOTrainer(object):
         self.use_rm = Role.RewardModel in role_worker_mapping
         self.ray_worker_group_cls = ray_worker_group_cls
         self.validation_generations_logger = ValidationGenerationsLogger()
-        self.exploration_tokens = ['Wait', 'But', 'Alternatively']
+        self.exploration_tokens = ['Wait', 'But', 'Alternatively','wait','but','alternatively','verify','check','confirm','ensure','assure','examine','investigate','explore','inspect','look into','check out','go over','review']
         self.exploration_token_ids = self.tokenizer(self.exploration_tokens, return_tensors='pt', add_special_tokens=False)['input_ids']
 
         # define KL control
@@ -907,10 +907,10 @@ class RayPPOTrainer(object):
                     new_batch = new_batch.union(gen_batch_output)
                     # To do: repeat before union branch_batch
                     
-                    with _timer('branch', time_raw):
+                    with _timer('branch', timing_raw):
                         branch_batch = self.actor_rollout_wg.generate_branch(gen_batch)
-                    new_batch = new_batch.repeat(repeat_times=3, interleave=True)
-                    new_batch = new_batch.union(branch_batch)
+                    # new_batch = new_batch.repeat(repeat_times=3, interleave=True)
+                    # new_batch = new_batch.union(branch_batch)
                     
                     with _timer('reward', timing_raw):
                         # compute scores. Support both model and function-based.
@@ -926,10 +926,15 @@ class RayPPOTrainer(object):
                         reward_manager_name = self.config.reward_model.get("reward_manager", "naive")
                         reward_extra_infos_dict: dict[str, list]
                         try:
-                            reward_result = self.reward_fn(new_batch, return_dict=True)
+                            if reward_manager_name != 'rlee':
+                                reward_result = self.reward_fn(new_batch, return_dict=True)
+                            else:
+                                reward_result = self.reward_fn(new_batch, branch_batch, return_dict=True)
+                                exploration_reward_tensor = reward_result['exploration_reward_tensor']
+                                metrics['exploration_reward'] = torch.sum(exploration_reward_tensor, dim=-1).tolist()
                             reward_tensor = reward_result['reward_tensor']
-                            reward_extra_infos_dict = reward_result['reward_extra_info']
-                            # if reward_manager_name == 'rlee':
+                            if reward_manager_name != 'rlee':
+                                reward_extra_infos_dict = reward_result['reward_extra_info']
                         except Exception as e:
                             print(f'Error in reward_fn: {e}')
                             reward_tensor = self.reward_fn(new_batch)

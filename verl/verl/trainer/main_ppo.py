@@ -158,7 +158,7 @@ def main_task(config):
         from verl.workers.reward_manager import RleeRewardManager
         reward_manager_cls = RleeRewardManager
         reward_fn = reward_manager_cls(tokenizer=tokenizer,num_examine=0,config=config)
-        val_reward_fn = reward_manager_cls(tokenizer=tokenizer,num_examine=0,config=config)
+        val_reward_fn = reward_manager_cls(tokenizer=tokenizer,num_examine=1,config=config)
     elif reward_manager_name == 'prime':
         from verl.workers.reward_manager import PrimeRewardManager
         reward_manager_cls = PrimeRewardManager
