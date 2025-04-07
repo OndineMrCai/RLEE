@@ -9,8 +9,8 @@ wandb login $WANDB_API_KEY
 
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=$basepath/train/train.parquet \
-    data.val_files=[$basepath/test/aime.parquet,$basepath/test/amc.parquet,$basepath/test/math.parquet] \
+    data.train_files=$datapath/train/train.parquet \
+    data.val_files=[$datapath/test/aime.parquet,$datapath/test/amc.parquet,$datapath/test/math.parquet] \
     data.train_batch_size=64 \
     data.val_batch_size=32 \
     data.max_prompt_length=1024 \
@@ -48,9 +48,8 @@ python3 -m verl.trainer.main_ppo \
     trainer.save_freq=30 \
     trainer.test_freq=10 \
     trainer.default_hdfs_dir=null \
-    trainer.total_epochs=1 "${@:1}" \
+    trainer.total_epochs=1 \
     actor_rollout_ref.rollout.enforce_eager=False \
     actor_rollout_ref.rollout.free_cache_engine=False \
     trainer.default_local_dir=$SavePath \
-    trainer.reward_type=$reward_type \
-    algorithm.adv_estimator=grpo
+    trainer.reward_type=$reward_type "${@:1}" 
