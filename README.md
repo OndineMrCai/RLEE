@@ -31,7 +31,7 @@ bash scrpits/train/train.sh
 ```
 
 
-## Acknowledge
+## Acknowledgements
 - Our training framework is built on [Short-RL](https://github.com/lblankl/Short-RL)，[deepscaler](https://github.com/agentica-project/deepscaler), [verl](https://github.com/volcengine/verl) and [ray](https://github.com/ray-project/ray).
 - Our model is based on [DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B)
 - Our math data is from [Open-Reasoner-Zero](https://github.com/Open-Reasoner-Zero/Open-Reasoner-Zero)
