@@ -15,7 +15,6 @@ python3 -m verl.trainer.main_ppo \
     data.val_batch_size=32 \
     data.max_prompt_length=1024 \
     data.max_response_length=4096 \
-    data.use_template=False \
     actor_rollout_ref.model.path=$MODEL_PATH  \
     actor_rollout_ref.actor.optim.lr=5e-7 \
     actor_rollout_ref.model.use_remove_padding=True \
@@ -35,13 +34,12 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.temperature=1.0 \
     actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
     actor_rollout_ref.rollout.n=8 \
-    actor_rollout_ref.rollout.validate_roll_out_max_length=5120 \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     algorithm.kl_ctrl.kl_coef=0.001 \
     trainer.critic_warmup=0 \
     trainer.logger=['console','wandb'] \
-    trainer.project_name='Orz' \
-    trainer.experiment_name='Orz7BShort' \
+    trainer.project_name='RLEE' \
+    trainer.experiment_name='main' \
     +trainer.val_before_train=True \
     trainer.n_gpus_per_node=8 \
     trainer.nnodes=1 \
