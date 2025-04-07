@@ -1,7 +1,7 @@
 set -x
 MODEL_PATH="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 export WANDB_API_KEY="604f775e1c1d41bc07625f2578abf8513dd7bc15"
-SavePath=
+savepath=
 datapath="./rlee/data"
 reward_type=rlee
 
@@ -51,5 +51,5 @@ python3 -m verl.trainer.main_ppo \
     trainer.total_epochs=1 \
     actor_rollout_ref.rollout.enforce_eager=False \
     actor_rollout_ref.rollout.free_cache_engine=False \
-    trainer.default_local_dir=$SavePath \
+    trainer.default_local_dir=$savepath \
     trainer.reward_type=$reward_type "${@:1}" 
