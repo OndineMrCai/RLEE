@@ -14,6 +14,7 @@ We introduce **RLEE**, which attempts to mitigate the overthinking phenomenon in
 ### Installation
 To begin working with **RLEE** for the ORZMath dataset, just run:
 ```
+git clone https://github.com/OndineMrCai/RLEE.git
 cd RLEE
 pip3 install -e . verl/
 pip3 install -e .
