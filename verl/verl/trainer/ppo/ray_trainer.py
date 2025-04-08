@@ -284,7 +284,7 @@ class RayPPOTrainer(object):
         self.ray_worker_group_cls = ray_worker_group_cls
         self.validation_generations_logger = ValidationGenerationsLogger()
         self.exploration_tokens = ['Wait', 'But', 'Alternatively','wait','but','alternatively','verify','check','examine','recheck','explore','doublecheck']
-        self.exploration_token_ids = [tokenizer(token, return_tensors='pt', add_special_tokens=False)['input_ids'] for token in self.exploration_tokens]
+        self.exploration_token_ids = [self.tokenizer(token, return_tensors='pt', add_special_tokens=False)['input_ids'] for token in self.exploration_tokens]
 
         # define KL control
         if self.use_reference_policy:
