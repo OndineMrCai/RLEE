@@ -59,6 +59,29 @@ def _pre_process_responses(pad_token_id, response_token_ids: torch.Tensor) -> Li
     token_ids = response_token_ids[:last_non_pad_index+1].tolist()
     return token_ids
 
+def find_token_positions_in_response(
+    response: List[int],
+    exploration_token_ids: List[List[torch.Tensor]]
+) -> List[int]:
+    token_positions = []
+
+    for token_tensor_list in exploration_token_ids:
+        # Convert list of scalar tensors to list of ints
+        token_ids = [t.item() for t in token_tensor_list]
+        token_len = len(token_ids)
+
+        # Sliding window search in response
+        found = False
+        for i in range(len(response) - token_len + 1):
+            if response[i:i + token_len] == token_ids:
+                token_positions.append(i)  # only the first match
+                found = True
+                break
+        if not found:
+            # (Optional) mark -1 if not found
+            pass
+    return token_positions
+
 class FirstTokenForbiddenProcessor:
     def __init__(self, forbidden_token_ids):
         self.forbidden_token_ids = set(forbidden_token_ids)
@@ -269,7 +292,7 @@ class vLLMRollout(BaseRollout):
         return DataProto(batch=batch)
 
     @torch.no_grad()
-    def generate_branch(self, gen_batch: DataProto, exploration_token: List[torch.tensor], **kwargs) -> DataProto:
+    def generate_branch(self, gen_batch: DataProto, exploration_token: List[List[torch.tensor]], **kwargs) -> DataProto:
         # rebuild vllm cache engine
         if self.config.free_cache_engine:
             self.inference_engine.init_cache_engine()
@@ -297,11 +320,10 @@ class vLLMRollout(BaseRollout):
             response = _pre_process_responses(responses[i])
             raw_idx = _pre_process_inputs(prompts[i])
     
-            all_token_positions = []
-            for token in exploration_token:
-                token_positions = [pos for pos, t in enumerate(response) if t == token]
-                all_token_positions.extend(token_positions)
-    
+            all_token_positions = find_token_positions_in_response(
+                response,
+                exploration_token
+            )
             all_token_positions = sorted(set(all_token_positions))
             exploration_positions = []
             for local_j, pos in enumerate(all_token_positions):

@@ -283,8 +283,8 @@ class RayPPOTrainer(object):
         self.use_rm = Role.RewardModel in role_worker_mapping
         self.ray_worker_group_cls = ray_worker_group_cls
         self.validation_generations_logger = ValidationGenerationsLogger()
-        self.exploration_tokens = ['Wait', 'But', 'Alternatively','wait','but','alternatively','verify','check','confirm','ensure','assure','examine','investigate','explore','inspect','look into','check out','go over','review']
-        self.exploration_token_ids = self.tokenizer(self.exploration_tokens, return_tensors='pt', add_special_tokens=False)['input_ids']
+        self.exploration_tokens = ['Wait', 'But', 'Alternatively','wait','but','alternatively','verify','check','examine','recheck','explore','doublecheck']
+        self.exploration_token_ids = [tokenizer(token, return_tensors='pt', add_special_tokens=False)['input_ids'] for token in self.exploration_tokens]
 
         # define KL control
         if self.use_reference_policy:
@@ -908,7 +908,7 @@ class RayPPOTrainer(object):
                     # To do: repeat before union branch_batch
                     
                     with _timer('branch', timing_raw):
-                        branch_batch = self.actor_rollout_wg.generate_branch(gen_batch)
+                        branch_batch = self.actor_rollout_wg.generate_branch(gen_batch, self.exploration_token_ids)
                     # new_batch = new_batch.repeat(repeat_times=3, interleave=True)
                     # new_batch = new_batch.union(branch_batch)
                     
