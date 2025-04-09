@@ -502,7 +502,7 @@ class ActorRolloutRefWorker(Worker):
         return output
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
-    def generate_sequences(self, gen_batch: DataProto):
+    def generate_branch(self, gen_batch: DataProto):
         # Support all hardwares
         gen_batch = gen_batch.to(torch.cuda.current_device())
 
@@ -531,7 +531,7 @@ class ActorRolloutRefWorker(Worker):
             log_gpu_memory_usage('After entering rollout sharding manager', logger=logger)
 
             gen_batch = self.rollout_sharding_manager.preprocess_data(gen_batch)
-            output = self.rollout.generate_sequences(gen_batch=gen_batch)
+            output = self.rollout.generate_branch(gen_batch=gen_batch)
 
             log_gpu_memory_usage('After rollout generation', logger=logger)
 
