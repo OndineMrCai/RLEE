@@ -22,6 +22,7 @@ import psutil
 
 import torch
 import torch.distributed
+from typing import List
 from torch.distributed.device_mesh import init_device_mesh
 import verl.utils.torch_functional as verl_F
 from omegaconf import DictConfig, open_dict
@@ -502,7 +503,7 @@ class ActorRolloutRefWorker(Worker):
         return output
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
-    def generate_branch(self, gen_batch: DataProto):
+    def generate_branch(self, gen_batch: DataProto, exploration_token: List[List[torch.tensor]]):
         # Support all hardwares
         gen_batch = gen_batch.to(torch.cuda.current_device())
 
@@ -531,7 +532,8 @@ class ActorRolloutRefWorker(Worker):
             log_gpu_memory_usage('After entering rollout sharding manager', logger=logger)
 
             gen_batch = self.rollout_sharding_manager.preprocess_data(gen_batch)
-            output = self.rollout.generate_branch(gen_batch=gen_batch)
+            exploration_token = self.rollout_sharding_manager.preprocess_exploration_token(exploration_token)
+            output = self.rollout.generate_branch(gen_batch=gen_batch, exploration_token=exploration_token)
 
             log_gpu_memory_usage('After rollout generation', logger=logger)
 

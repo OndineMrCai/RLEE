@@ -19,12 +19,12 @@ import numpy as np
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.api import ShardingStrategy, ShardedStateDictConfig, StateDictType, FullStateDictConfig
 from torch.distributed.device_mesh import DeviceMesh
-
+from typing import List
 from verl.third_party.vllm import LLM
 from verl.third_party.vllm import parallel_state as vllm_ps
 from verl import DataProto
 from verl.utils.torch_functional import (broadcast_dict_tensor, allgather_dict_tensors)
-from verl.protocol import all_gather_data_proto
+from verl.protocol import all_gather_data_proto, all_gather_exploration_token
 from verl.utils.debug import log_gpu_memory_usage
 from verl.third_party.vllm import vllm_version
 
@@ -150,6 +150,18 @@ class FSDPVLLMShardingManager(BaseShardingManager):
 
         all_gather_data_proto(data=data, process_group=group)
         return data
+    
+    def preprocess_exploration_token(self, exploration_token: List[List[torch.tensor]]) -> List[List[torch.tensor]]:
+        if self.tp_size == 1:
+            return exploration_token.cuda()
+                # TODO: Current impl doesn't consider FSDP with torch micro-dp
+        if vllm_version in ('0.3.1', '0.4.2', '0.5.4', '0.6.3'):
+            group = vllm_ps.get_tensor_model_parallel_group()
+        else:
+            group = vllm_ps.get_tensor_model_parallel_group().device_group
+
+        all_gather_exploration_token(exploration_token=exploration_token, process_group=group)
+        return exploration_token
 
     def postprocess_data(self, data: DataProto) -> DataProto:
         """Get chunk data of this tp rank since we do all gather in preprocess."""
