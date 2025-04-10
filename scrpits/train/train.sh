@@ -1,4 +1,5 @@
 set -x
+
 MODEL_PATH="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 export WANDB_API_KEY="604f775e1c1d41bc07625f2578abf8513dd7bc15"
 savepath=
