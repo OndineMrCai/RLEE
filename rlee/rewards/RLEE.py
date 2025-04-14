@@ -1,6 +1,7 @@
 from typing import List, Union
-from rlee.rewards.rewards_type import RewardConfig, RewardFn, RewardInput, RewardOutput, RewardType, RLEEConfig, RLEERewardInput, RLEERewardOutput, RLEERewardFn
+from rlee.rewards.rewards_type import RewardType, RLEEConfig, RLEERewardInput, RLEERewardOutput, RLEERewardFn
 from rlee.rewards.math_utils.utils import extract_answer, grade_answer_sympy, grade_answer_mathd
+from rlee.rewards.math_reward import deepscaler_reward_fn
 import re
 from typing import Dict, Tuple, Optional
 from collections import defaultdict
@@ -185,7 +186,11 @@ class RLEERewardMathFn(RLEERewardFn):
         else:
             return RLEERewardOutput(answer_reward=-1.5, format_reward=1, exploration_reward=exploration_reward_list, is_correct=False)
         
-def compute_score(solution_str, solution_length, branch, branch_length, ground_truth, enable_llm=False, rlee = True):
+def compute_score(solution_str, solution_length, branch, branch_length, ground_truth, enable_llm=False, rlee = True):        
+    if branch is None or branch_length is None:
+        answer_score, format_score = deepscaler_reward_fn(solution_str, ground_truth, enable_llm)
+        return answer_score, format_score, [0]
+
     reward_config = RLEEConfig()
     reward_config.use_math_orm = enable_llm
     reward_fn = RLEERewardMathFn(reward_config)

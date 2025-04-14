@@ -4,6 +4,7 @@ to evaluate model responses for various problem types, including math and coding
 """
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Optional, List
 
 @dataclass
 class RewardConfig:
@@ -80,8 +81,8 @@ class RLEERewardInput:
     problem: str
     model_response: str
     model_response_length: int
-    branch: list[list[str]]
-    branch_length: list[list[int]]
+    branch: Optional[List[List[str]]] = None
+    branch_length: Optional[List[List[int]]] = None
     problem_type: RewardType = RewardType.UNK
     ground_truth: dict = field(default_factory=dict)
 

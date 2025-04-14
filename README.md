@@ -16,10 +16,19 @@ To begin working with **RLEE** for the ORZMath dataset, just run:
 ```
 git clone https://github.com/OndineMrCai/RLEE.git
 cd RLEE
+
+# Install verl and rlee
 pip3 install -e . verl/
 pip3 install -e .
-```
 
+# Install the latest stable version of vLLM
+pip3 install vllm==0.8.2
+
+# Install flash-attn and tensor dict
+pip3 install flash-attn --no-build-isolation
+pip3 install tensordict==0.6.2
+```
+Note: please remove deepspeed, otherwise the verl will crash
 
 ### Training
 We directly use the training data from [Open-Zero-Reasoner](https://github.com/Open-Reasoner-Zero/Open-Reasoner-Zero) at rlee/data/train directory. Please remember to change the save path in the bash shell.

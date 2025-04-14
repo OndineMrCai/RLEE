@@ -104,16 +104,14 @@ class RewardMathFn(RewardFn):
         
         print(f"Model Response: {model_response}")
         
-        
-        
         model_solution = model_response
         model_answer,processed_str = extract_solution(model_solution)
         format_correct = validate_response_structure(processed_str)
         if not format_correct:
-            return -2, -1
+            return RewardOutput(answer_reward=-2, format_reward=-1, is_correct=False)
         
         if model_answer is None:
-            return -2,-1
+            return RewardOutput(answer_reward=-2, format_reward=-1, is_correct=False)
 
         # Process the ground truth(s)
         ground_truths = input.ground_truth.get("answer", None)
@@ -123,7 +121,7 @@ class RewardMathFn(RewardFn):
         if isinstance(ground_truths, (str, float, int)):
             ground_truths = [ground_truths]
         if ground_truths is None:
-            return -2,-1
+            return RewardOutput(answer_reward=-2, format_reward=-1, is_correct=False)
         # Process each ground truth
         processed_ground_truths = []
         for truth in ground_truths:
@@ -136,24 +134,22 @@ class RewardMathFn(RewardFn):
                 processed_ground_truths.append(truth)
                 
         if not processed_ground_truths:
-            return -2,-1
+            return RewardOutput(answer_reward=-2, format_reward=-1, is_correct=False)
 
         # Check against all possible correct answers
         for ground_truth in processed_ground_truths:
             is_correct = grade_answer_mathd(model_answer, ground_truth) or grade_answer_sympy(model_answer, ground_truth)
             if is_correct:
-                return 2, 1
-
-        
+                return RewardOutput(answer_reward=2, format_reward=1, is_correct=True)
                 
-        return -1.5 , 1
+        return RewardOutput(answer_reward=-1.5, format_reward=1, is_correct=False)
 
 def deepscaler_reward_fn(solution_str: str, ground_truth: Union[str, List[str]], enable_llm = False):
     reward_config = RewardConfig()
     reward_config.use_math_orm = enable_llm
     reward_fn = RewardMathFn(reward_config)
-    answer_score,format_score = reward_fn(RewardInput(problem=solution_str, problem_type=RewardType.MATH, model_response=solution_str, ground_truth={"answer": ground_truth}))
-    return answer_score+format_score
+    reward_output = reward_fn(RewardInput(problem=solution_str, problem_type=RewardType.MATH, model_response=solution_str, ground_truth={"answer": ground_truth}))
+    return reward_output.answer_score, reward_output.format_score
 
 if __name__ == "__main__":
     reward = RewardMathFn(RewardConfig)
