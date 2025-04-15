@@ -149,7 +149,7 @@ def deepscaler_reward_fn(solution_str: str, ground_truth: Union[str, List[str]],
     reward_config.use_math_orm = enable_llm
     reward_fn = RewardMathFn(reward_config)
     reward_output = reward_fn(RewardInput(problem=solution_str, problem_type=RewardType.MATH, model_response=solution_str, ground_truth={"answer": ground_truth}))
-    return reward_output.answer_score, reward_output.format_score
+    return reward_output.answer_reward, reward_output.format_reward
 
 if __name__ == "__main__":
     reward = RewardMathFn(RewardConfig)
