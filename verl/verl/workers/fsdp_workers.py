@@ -74,8 +74,9 @@ class ActorRolloutRefWorker(Worker):
     or a hybrid engine based on the config.rollout
     """
 
-    def __init__(self, config: DictConfig, role: str):
+    def __init__(self, config: DictConfig, role: str, exploration_token: List[List[torch.tensor]]):
         super().__init__()
+        self.exploration_token = exploration_token
         self.config = config
         import torch.distributed
         if not torch.distributed.is_initialized():
@@ -521,7 +522,7 @@ class ActorRolloutRefWorker(Worker):
         return output
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
-    def generate_branch(self, gen_batch: DataProto, exploration_token: List[List[torch.tensor]]):
+    def generate_branch(self, gen_batch: DataProto):
         # Support all hardwares
         gen_batch = gen_batch.to(torch.cuda.current_device())
 
@@ -550,7 +551,7 @@ class ActorRolloutRefWorker(Worker):
             log_gpu_memory_usage('After entering rollout sharding manager', logger=logger)
 
             gen_batch = self.rollout_sharding_manager.preprocess_data(gen_batch)
-            exploration_token = self.rollout_sharding_manager.preprocess_exploration_token(exploration_token)
+            exploration_token = self.rollout_sharding_manager.preprocess_exploration_token(self.exploration_token)
             output = self.rollout.generate_branch(gen_batch=gen_batch, exploration_token=exploration_token)
 
             log_gpu_memory_usage('After rollout generation', logger=logger)
