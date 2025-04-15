@@ -546,7 +546,7 @@ class RayPPOTrainer(object):
             test_batch = test_batch.union(test_output_gen_batch)
 
             # evaluate using reward_function
-            result = self.val_reward_fn(test_batch, None, return_dict=True)
+            result = self.val_reward_fn(test_batch, None,return_dict=True)
             reward_tensor = result["reward_tensor"]
 
             # Store scores
@@ -586,7 +586,8 @@ class RayPPOTrainer(object):
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.ActorRollout)
             actor_rollout_cls = RayClassWithInitArgs(cls=self.role_worker_mapping[Role.ActorRollout],
                                                      config=self.config.actor_rollout_ref,
-                                                     role='actor_rollout')
+                                                     role='actor_rollout',
+                                                     exploration_token=self.exploration_token_ids)
             self.resource_pool_to_cls[resource_pool]['actor_rollout'] = actor_rollout_cls
         else:
             raise NotImplementedError
