@@ -546,7 +546,7 @@ class RayPPOTrainer(object):
             test_batch = test_batch.union(test_output_gen_batch)
 
             # evaluate using reward_function
-            result = self.val_reward_fn(test_batch, return_dict=True)
+            result = self.val_reward_fn(test_batch, None, return_dict=True)
             reward_tensor = result["reward_tensor"]
 
             # Store scores
