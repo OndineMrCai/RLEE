@@ -603,7 +603,8 @@ class RayPPOTrainer(object):
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.RefPolicy)
             ref_policy_cls = RayClassWithInitArgs(self.role_worker_mapping[Role.RefPolicy],
                                                   config=self.config.actor_rollout_ref,
-                                                  role='ref')
+                                                  role='ref',
+                                                  exploration_token=self.exploration_token_ids)
             self.resource_pool_to_cls[resource_pool]['ref'] = ref_policy_cls
 
         # create a reward model if reward_fn is None
