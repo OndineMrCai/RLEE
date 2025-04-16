@@ -844,7 +844,7 @@ class RayPPOTrainer(object):
                     batch = batch.union(gen_batch_output)
 
                     with _timer('branch', timing_raw):
-                        branch_batch = self.actor_rollout_wg.generate_branch(gen_batch)
+                        branch_batch = self.actor_rollout_wg.generate_branch(gen_batch_output)
                     
                     batch.batch['response_mask'] = compute_response_mask(batch)
                     # balance the number of valid tokens on each dp rank.
