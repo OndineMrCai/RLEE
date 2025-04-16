@@ -67,20 +67,17 @@ def find_token_positions_in_response(
     token_positions = []
 
     for token_tensor_list in exploration_token_ids:
-        # Convert list of scalar tensors to list of ints
-        token_ids = [t.item() for t in token_tensor_list]
+        token_ids = token_tensor_list[0].tolist()
         token_len = len(token_ids)
-
-        # Sliding window search in response
         found = False
         for i in range(len(response) - token_len + 1):
             if response[i:i + token_len] == token_ids:
-                token_positions.append(i)  # only the first match
+                token_positions.append(i) 
                 found = True
                 break
         if not found:
-            # (Optional) mark -1 if not found
             pass
+
     return token_positions
 
 class FirstTokenForbiddenProcessor:
