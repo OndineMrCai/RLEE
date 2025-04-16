@@ -279,8 +279,8 @@ class FIREvLLMRollout(vLLMRollout):
         exploration_position_mask = []
         exploration_sample_index = []
         for i in range(batch_size):
-            response = _pre_process_responses(responses[i])
-            raw_idx = _pre_process_inputs(prompts[i])
+            response = _pre_process_responses(self.pad_token_id,responses[i])
+            raw_idx = _pre_process_inputs(self.pad_token_id,prompts[i])
     
             all_token_positions = find_token_positions_in_response(
                 response,

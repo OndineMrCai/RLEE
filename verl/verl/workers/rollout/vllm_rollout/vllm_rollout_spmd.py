@@ -366,10 +366,10 @@ class vLLMRollout(BaseRollout):
         exploration_sample_index = []
         for i in range(batch_size):
             if 'raw_prompt_ids' not in non_tensor_batch:
-                raw_idx = _pre_process_inputs(prompts[i])
+                raw_idx = _pre_process_inputs(self.pad_token_id, prompts[i])
             else:
                 raw_idx = non_tensor_batch['raw_prompt_ids'][i]
-            response = _pre_process_responses(responses[i])
+            response = _pre_process_responses(self.pad_token_id, responses[i])
     
             all_token_positions = find_token_positions_in_response(
                 response,
