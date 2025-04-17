@@ -74,7 +74,7 @@ class ActorRolloutRefWorker(Worker):
     or a hybrid engine based on the config.rollout
     """
 
-    def __init__(self, config: DictConfig, role: str, exploration_token: List[List[torch.tensor]]):
+    def __init__(self, config: DictConfig, role: str, exploration_token: List[torch.tensor]):
         super().__init__()
         self.exploration_token = exploration_token
         self.config = config

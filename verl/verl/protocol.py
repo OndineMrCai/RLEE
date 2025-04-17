@@ -665,15 +665,13 @@ def all_gather_data_proto(data: DataProto, process_group):
     data.non_tensor_batch = {k: np.concatenate([d[k] for d in all_non_tensor_batch]) for k in data.non_tensor_batch}
 
 def all_gather_exploration_token(
-    exploration_token: List[List[torch.Tensor]],
+    exploration_token: List[torch.Tensor],
     process_group
-) -> List[List[torch.Tensor]]:
+) -> List[torch.Tensor]:
     group_size = torch.distributed.get_world_size(group=process_group)
-    rank = torch.distributed.get_rank(group=process_group)
     device = torch.cuda.current_device()
-    cpu_exploration_token = [
-        [t.cpu() for t in sublist] for sublist in exploration_token
-    ]
+
+    cpu_exploration_token = [t.cpu() for t in exploration_token]
 
     gathered_cpu_tokens = [None for _ in range(group_size)]
     torch.distributed.all_gather_object(
@@ -682,10 +680,6 @@ def all_gather_exploration_token(
 
     all_tokens_on_gpu = []
     for rank_tokens in gathered_cpu_tokens:
-
-        tokens_on_gpu = [
-            [t.to(device) for t in sublist] for sublist in rank_tokens
-        ]
-        all_tokens_on_gpu.extend(tokens_on_gpu)
+        all_tokens_on_gpu.extend([t.to(device) for t in rank_tokens])
 
     return all_tokens_on_gpu

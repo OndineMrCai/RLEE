@@ -81,17 +81,20 @@ def find_token_positions_in_response(
     return token_positions
 
 class FirstTokenForbiddenProcessor:
-    def __init__(self, forbidden_token_ids):
-        self.forbidden_token_ids = set(forbidden_token_ids)
+    def __init__(self, exploration_token_ids: List[torch.Tensor]):
+        # 提取每个 token sequence 的第一个 token（无论是一维还是二维 tensor）
+        self.forbidden_first_token_ids = set(
+            t.view(-1)[0].item() for t in exploration_token_ids if t.numel() > 0
+        )
         self.applied = False
 
-    def __call__(self, logits, step):
+    def __call__(self, logits: torch.Tensor, step: int) -> torch.Tensor:
         if not self.applied and step == 0:
-            for token_id in self.forbidden_token_ids:
+            for token_id in self.forbidden_first_token_ids:
                 logits[token_id] = -float("inf")
-            self.applied = True  # 标记为已应用
+            self.applied = True
         return logits
-
+    
 class FIREvLLMRollout(vLLMRollout):
 
     def __init__(self, actor_module: nn.Module, config: DictConfig, tokenizer, model_hf_config, **kwargs):
@@ -251,7 +254,7 @@ class FIREvLLMRollout(vLLMRollout):
         return DataProto(batch=batch)
 
     @torch.no_grad()
-    def generate_branch(self, gen_batch: DataProto, exploration_token: List[List[torch.tensor]], **kwargs) -> Optional[DataProto]:
+    def generate_branch(self, gen_batch: DataProto, exploration_token: List[torch.tensor], **kwargs) -> Optional[DataProto]:
         # rebuild vllm cache engine
         if self.config.free_cache_engine:
             self.inference_engine.init_cache_engine()
@@ -312,7 +315,6 @@ class FIREvLLMRollout(vLLMRollout):
                 prompts=None,
                 sampling_params=self.sampling_params,
                 prompt_token_ids=idx_list,
-                logits_processors=forbidden_processor,
                 use_tqdm=False
             )
 

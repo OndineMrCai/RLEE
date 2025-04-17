@@ -88,15 +88,17 @@ def find_token_positions_in_response(
     return token_positions
 
 class FirstTokenForbiddenProcessor:
-    def __init__(self, forbidden_token_ids):
-        self.forbidden_token_ids = set(forbidden_token_ids)
+    def __init__(self, exploration_token_ids: List[torch.Tensor]):
+        self.forbidden_first_token_ids = set(
+            t.view(-1)[0].item() for t in exploration_token_ids if t.numel() > 0
+        )
         self.applied = False
 
-    def __call__(self, logits, step):
+    def __call__(self, logits: torch.Tensor, step: int) -> torch.Tensor:
         if not self.applied and step == 0:
-            for token_id in self.forbidden_token_ids:
+            for token_id in self.forbidden_first_token_ids:
                 logits[token_id] = -float("inf")
-            self.applied = True  # 标记为已应用
+            self.applied = True
         return logits
 
 
@@ -326,7 +328,7 @@ class vLLMRollout(BaseRollout):
         return DataProto(batch=batch, non_tensor_batch=non_tensor_batch)
 
     @torch.no_grad()
-    def generate_branch(self, gen_batch: DataProto, exploration_token: List[List[torch.tensor]], **kwargs) -> Optional[DataProto]:
+    def generate_branch(self, gen_batch: DataProto, exploration_token: List[torch.tensor], **kwargs) -> Optional[DataProto]:
         # rebuild vllm cache engine
         if self.config.free_cache_engine:
             self.inference_engine.init_cache_engine()
@@ -340,11 +342,14 @@ class vLLMRollout(BaseRollout):
         # used to construct attention_mask
         eos_token_id = gen_batch.meta_info['eos_token_id']
 
+        forbidden_processor = FirstTokenForbiddenProcessor(forbidden_token_ids=exploration_token)
+
         kwargs = {
                 'top_k': -1,
                 'top_p': 0.95,
                 'temperature': 0.6,
                 'n': 3,
+                'logits_processors': forbidden_processor
         }
 
         non_tensor_batch = gen_batch.non_tensor_batch
@@ -397,14 +402,11 @@ class vLLMRollout(BaseRollout):
         vllm_inputs = [{
             'prompt_token_ids': raw_prompt_ids
         } for raw_prompt_ids in idx_list]
-
-        forbidden_processor = FirstTokenForbiddenProcessor(forbidden_token_ids=exploration_token)
     
         with self.update_sampling_params(**kwargs):
             outputs = self.inference_engine.generate(
                 prompts=vllm_inputs,  # because we have already convert it to prompt token id
                 sampling_params=self.sampling_params,
-                logits_processors=forbidden_processor,
                 use_tqdm=False)
             # TODO(sgm): disable logprob when recompute_log_prob is enable
             # if n = 1: (bs, response_length) ; if n > 1: (bs * n, response_length)

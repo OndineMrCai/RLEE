@@ -152,7 +152,7 @@ class FSDPVLLMShardingManager(BaseShardingManager):
         all_gather_data_proto(data=data, process_group=group)
         return data
 
-    def preprocess_exploration_token(self, exploration_token: List[List[torch.tensor]]) -> List[List[torch.tensor]]:
+    def preprocess_exploration_token(self, exploration_token: List[torch.tensor]) -> List[torch.tensor]:
         if self.tp_size == 1:
             return exploration_token.cuda()
         # TODO: Current impl doesn't consider FSDP with torch micro-dp
