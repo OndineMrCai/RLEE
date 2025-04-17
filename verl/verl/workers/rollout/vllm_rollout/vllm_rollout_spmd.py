@@ -370,13 +370,7 @@ class vLLMRollout(BaseRollout):
             if 'raw_prompt_ids' not in non_tensor_batch:
                 raw_idx = _pre_process_inputs(self.pad_token_id, prompts[i])
             else:
-                if isinstance(non_tensor_batch['raw_prompt_ids'], np.ndarray):
-                    raw_idx = non_tensor_batch['raw_prompt_ids'][i].tolist()
-                elif isinstance(non_tensor_batch['raw_prompt_ids'], list):
-                    raw_idx = non_tensor_batch['raw_prompt_ids'][i]
-                else:
-                    raise TypeError(
-                        f"raw_prompt_ids must be a list or numpy array, got {type(non_tensor_batch['raw_prompt_ids'])}")
+                raw_idx = list(non_tensor_batch['raw_prompt_ids'][i])
             response = _pre_process_responses(self.pad_token_id, responses[i])
     
             all_token_positions = find_token_positions_in_response(
