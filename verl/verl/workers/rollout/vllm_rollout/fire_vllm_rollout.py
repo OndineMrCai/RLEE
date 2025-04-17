@@ -82,18 +82,24 @@ def find_token_positions_in_response(
 
 class FirstTokenForbiddenProcessor:
     def __init__(self, exploration_token_ids: List[torch.Tensor]):
-        # 提取每个 token sequence 的第一个 token（无论是一维还是二维 tensor）
-        self.forbidden_first_token_ids = set(
+        self.forbidden_token_ids = {
             t.view(-1)[0].item() for t in exploration_token_ids if t.numel() > 0
-        )
-        self.applied = False
+        }
 
     def __call__(self, logits: torch.Tensor, step: int) -> torch.Tensor:
-        if not self.applied and step == 0:
-            for token_id in self.forbidden_first_token_ids:
+        if step == 0:
+            for token_id in self.forbidden_token_ids:
                 logits[token_id] = -float("inf")
-            self.applied = True
         return logits
+
+    def __repr__(self):
+        return f"FirstTokenForbiddenProcessor(forbidden_token_ids={list(self.forbidden_token_ids)})"
+
+    def clone(self):
+        # 构造新的 processor 实例
+        return FirstTokenForbiddenProcessor([
+            torch.tensor([token_id]) for token_id in self.forbidden_token_ids
+        ])
     
 class FIREvLLMRollout(vLLMRollout):
 
@@ -275,7 +281,7 @@ class FIREvLLMRollout(vLLMRollout):
                 'top_p': 0.95,
                 'temperature': 0.6,
                 'n': 3,
-                'logits_processors': forbidden_processor
+                'logits_processors': [forbidden_processor]
             }
         
         idx_list = []

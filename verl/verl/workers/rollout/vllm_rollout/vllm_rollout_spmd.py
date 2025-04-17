@@ -89,17 +89,23 @@ def find_token_positions_in_response(
 
 class FirstTokenForbiddenProcessor:
     def __init__(self, exploration_token_ids: List[torch.Tensor]):
-        self.forbidden_first_token_ids = set(
+        self.forbidden_token_ids = {
             t.view(-1)[0].item() for t in exploration_token_ids if t.numel() > 0
-        )
-        self.applied = False
+        }
 
     def __call__(self, logits: torch.Tensor, step: int) -> torch.Tensor:
-        if not self.applied and step == 0:
-            for token_id in self.forbidden_first_token_ids:
+        if step == 0:
+            for token_id in self.forbidden_token_ids:
                 logits[token_id] = -float("inf")
-            self.applied = True
         return logits
+
+    def __repr__(self):
+        return f"FirstTokenForbiddenProcessor(forbidden_token_ids={list(self.forbidden_token_ids)})"
+
+    def clone(self):
+        return FirstTokenForbiddenProcessor([
+            torch.tensor([token_id]) for token_id in self.forbidden_token_ids
+        ])
 
 
 class vLLMRollout(BaseRollout):
@@ -349,7 +355,7 @@ class vLLMRollout(BaseRollout):
                 'top_p': 0.95,
                 'temperature': 0.6,
                 'n': 3,
-                'logits_processors': forbidden_processor
+                'logits_processors': [forbidden_processor]
         }
 
         non_tensor_batch = gen_batch.non_tensor_batch
