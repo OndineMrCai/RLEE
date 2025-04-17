@@ -342,7 +342,7 @@ class vLLMRollout(BaseRollout):
         # used to construct attention_mask
         eos_token_id = gen_batch.meta_info['eos_token_id']
 
-        forbidden_processor = FirstTokenForbiddenProcessor(forbidden_token_ids=exploration_token)
+        forbidden_processor = FirstTokenForbiddenProcessor(exploration_token_ids=exploration_token)
 
         kwargs = {
                 'top_k': -1,

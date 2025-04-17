@@ -268,11 +268,14 @@ class FIREvLLMRollout(vLLMRollout):
         # used to construct attention_mask
         eos_token_id = gen_batch.meta_info['eos_token_id']
 
+        forbidden_processor = FirstTokenForbiddenProcessor(exploration_token_ids=exploration_token)
+
         kwargs = {
                 'top_k': -1,
                 'top_p': 0.95,
                 'temperature': 0.6,
                 'n': 3,
+                'logits_processors': forbidden_processor
             }
         
         idx_list = []
@@ -307,8 +310,6 @@ class FIREvLLMRollout(vLLMRollout):
 
         if not idx_list:
             return None
-        
-        forbidden_processor = FirstTokenForbiddenProcessor(forbidden_token_ids=exploration_token)
         
         with self.update_sampling_params(**kwargs):
             new_outputs = self.inference_engine.generate(
