@@ -156,7 +156,7 @@ class RleeRewardManager:
                 already_print_data_sources[data_source] += 1
                 print("[sequences]", sequences_str)
                 print("[ground_truth]", ground_truth)
-                print("[exploration_reward]", str(exploration_reward))
+                print("[exploration_reward]", exploration_reward)
                 print("[score]", str(answer_reward + format_reward))
                 
             branch_idx = branch_idx + counts[idx]
