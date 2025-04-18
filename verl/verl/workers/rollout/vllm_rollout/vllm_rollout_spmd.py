@@ -93,10 +93,20 @@ class FirstTokenForbiddenProcessor:
             t.view(-1)[0].item() for t in exploration_token_ids if t.numel() > 0
         }
 
-    def __call__(self, logits: torch.Tensor, step: int) -> torch.Tensor:
-        if step == 0:
+    def __call__(self, past_tokens, logits: torch.Tensor) -> torch.Tensor:
+        is_first_step = (
+            isinstance(past_tokens, tuple) and
+            len(past_tokens) > 0 and
+            isinstance(past_tokens[0], torch.Tensor) and
+            past_tokens[0].numel() == 0
+        ) or (
+            isinstance(past_tokens, tuple) and len(past_tokens) == 0
+        )
+
+        if is_first_step:
             for token_id in self.forbidden_token_ids:
                 logits[token_id] = -float("inf")
+
         return logits
 
     def __repr__(self):
