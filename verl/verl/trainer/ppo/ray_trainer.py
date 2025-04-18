@@ -889,7 +889,7 @@ class RayPPOTrainer(object):
                             else:
                                 reward_result = self.reward_fn(batch, branch_batch, return_dict=True)
                                 exploration_reward_tensor = reward_result['exploration_reward_tensor']
-                                metrics['exploration_reward'] = torch.sum(exploration_reward_tensor, dim=-1).tolist()
+                                metrics['train/exploration_reward'] = torch.sum(exploration_reward_tensor, dim=-1).mean().item()
                                 reward_tensor = reward_result['reward_tensor']
                         except Exception as e:
                             print(f'Error in reward_fn: {e}')
