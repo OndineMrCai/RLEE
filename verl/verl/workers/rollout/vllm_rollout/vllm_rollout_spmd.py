@@ -418,6 +418,8 @@ class vLLMRollout(BaseRollout):
         vllm_inputs = [{
             'prompt_token_ids': raw_prompt_ids
         } for raw_prompt_ids in idx_list]
+
+        batch_size = len(idx_list)
     
         with self.update_sampling_params(**kwargs):
             outputs = self.inference_engine.generate(
