@@ -59,6 +59,8 @@ def extract_solution(solution_str: str) -> Tuple[Optional[str], str]:
         Tuple containing (extracted_answer, processed_string)
     """
     # Split response to isolate assistant output
+    if "<｜Assistant｜>" in solution_str:
+        processed_str = solution_str.split("<｜Assistant｜>", 1)[1]
     if "Assistant:" in solution_str:
         processed_str = solution_str.split("Assistant:", 1)[1]
     elif "<|im_start|>assistant" in solution_str:
