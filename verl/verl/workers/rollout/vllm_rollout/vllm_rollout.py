@@ -362,6 +362,8 @@ class vLLMRollout(BaseRollout):
         if not idx_list:
             return None
         
+        batch_size = len(idx_list)
+
         with self.update_sampling_params(**kwargs):
             new_outputs = self.inference_engine.generate(
                 prompts=None,
